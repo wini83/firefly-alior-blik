@@ -7,13 +7,6 @@ import logging
 
 from tabulate import tabulate
 
-# Konfiguracja logowania
-# logging.basicConfig(
-#     filename='firefly_tool.log',
-#     level=logging.INFO,
-#     format='%(asctime)s - %(levelname)s - %(message)s'
-# )
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
