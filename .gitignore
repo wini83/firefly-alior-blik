@@ -126,3 +126,5 @@ fabric.properties
 /*.csv
 
 __pycache__/
+
+.venv/
