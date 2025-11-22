@@ -75,7 +75,7 @@ async def do_match(encoded_id: str):
         firefly = FireflyClient(FIREFLY_URL, FIREFLY_TOKEN)
         processor = TransactionProcessor(firefly)
         report = processor.match(csv_data, DESCRIPTION_FILTER, exact_match=False)
-        not_mathed = len([r for r in report if not r.matches])
+        not_matched = len([r for r in report if not r.matches])
         with_one_match = len([r for r in report if len(r.matches) == 1])
         with_many_matches = len([r for r in report if len(r.matches) > 1])
 
@@ -86,7 +86,7 @@ async def do_match(encoded_id: str):
             "decoded_name": decoded,
             "records_in_file": len(csv_data),
             "transactions_found": len(report),
-            "transactions_not_matched": not_mathed,
+            "transactions_not_matched": not_matched,
             "transactions_with_one_match": with_one_match,
             "transactions_with_many_matches": with_many_matches,
             "content": report,

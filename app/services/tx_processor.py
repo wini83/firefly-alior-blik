@@ -70,5 +70,7 @@ class TransactionProcessor:
     def apply_match(self, tx: SimplifiedTx, record: SimplifiedRecord):
         new_description = f"{tx.description};{record.details}"
         self.firefly_client.update_transaction_description(int(tx.id), new_description)
-        self.firefly_client.update_transaction_notes(int(tx.id), record.pretty_print())
+        notes = tx.notes
+        notes += f"\n{record.pretty_print()}"
+        self.firefly_client.update_transaction_notes(int(tx.id), notes)
         self.firefly_client.add_tag_to_transaction(int(tx.id), "blik_done")
