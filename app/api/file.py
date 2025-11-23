@@ -13,7 +13,7 @@ from app.services.csv_reader import BankCSVReader
 from app.services.tx_processor import MatchResult, TransactionProcessor
 from app.utils.encoding import decode_base64url
 
-router = APIRouter(prefix="/file", tags=["files"])
+router = APIRouter(prefix="/api/file", tags=["files"])
 logger = logging.getLogger(__name__)
 
 MEM_MATCHES: Dict[str, List[MatchResult]] = {}
@@ -53,43 +53,45 @@ async def get_tempfile(encoded_id: str):
 
 @router.get("/do-match/{encoded_id}", dependencies=[Depends(verify_token)])
 async def do_match(encoded_id: str):
-        print(f"cache items before: {len(MEM_MATCHES)}")
-        decoded = decode_base64url(encoded_id)
+    print(f"cache items before: {len(MEM_MATCHES)}")
+    decoded = decode_base64url(encoded_id)
 
-        if "/" in decoded or ".." in decoded:
-            raise HTTPException(status_code=400, detail="Invalid file id")
+    if "/" in decoded or ".." in decoded:
+        raise HTTPException(status_code=400, detail="Invalid file id")
 
-        tempdir = tempfile.gettempdir()
-        full_path = os.path.join(tempdir, decoded + ".csv")
+    tempdir = tempfile.gettempdir()
+    full_path = os.path.join(tempdir, decoded + ".csv")
 
-        if not os.path.exists(full_path):
-            raise HTTPException(status_code=404, detail="File not found")
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
 
-        csv_data = BankCSVReader(full_path).parse()
+    csv_data = BankCSVReader(full_path).parse()
 
-        if not FIREFLY_URL or not FIREFLY_TOKEN:
-            logger.error("Missing FIREFLY_URL or FIREFLY_TOKEN")
-            raise HTTPException(status_code=500, detail="Config error")
+    if not FIREFLY_URL or not FIREFLY_TOKEN:
+        logger.error("Missing FIREFLY_URL or FIREFLY_TOKEN")
+        raise HTTPException(status_code=500, detail="Config error")
 
-        firefly = FireflyClient(FIREFLY_URL, FIREFLY_TOKEN)
-        processor = TransactionProcessor(firefly)
-        report = processor.match(csv_data, DESCRIPTION_FILTER, exact_match=False,tag=TAG_BLIK_DONE)
-        not_matched = len([r for r in report if not r.matches])
-        with_one_match = len([r for r in report if len(r.matches) == 1])
-        with_many_matches = len([r for r in report if len(r.matches) > 1])
+    firefly = FireflyClient(FIREFLY_URL, FIREFLY_TOKEN)
+    processor = TransactionProcessor(firefly)
+    report = processor.match(
+        csv_data, DESCRIPTION_FILTER, exact_match=False, tag=TAG_BLIK_DONE
+    )
+    not_matched = len([r for r in report if not r.matches])
+    with_one_match = len([r for r in report if len(r.matches) == 1])
+    with_many_matches = len([r for r in report if len(r.matches) > 1])
 
-        MEM_MATCHES[encoded_id] = report
+    MEM_MATCHES[encoded_id] = report
 
-        return {
-            "file_id": encoded_id,
-            "decoded_name": decoded,
-            "records_in_file": len(csv_data),
-            "transactions_found": len(report),
-            "transactions_not_matched": not_matched,
-            "transactions_with_one_match": with_one_match,
-            "transactions_with_many_matches": with_many_matches,
-            "content": report,
-        }
+    return {
+        "file_id": encoded_id,
+        "decoded_name": decoded,
+        "records_in_file": len(csv_data),
+        "transactions_found": len(report),
+        "transactions_not_matched": not_matched,
+        "transactions_with_one_match": with_one_match,
+        "transactions_with_many_matches": with_many_matches,
+        "content": report,
+    }
 
 
 @router.post("/apply_match/{encoded_id}")
@@ -105,7 +107,9 @@ async def apply_matches(encoded_id: str, payload: ApplyPayload):
     for req_id in payload.csv_indexes:
         item = index.get(req_id)
         if not item:
-            raise HTTPException(status_code=400, detail=f"Transaction id {req_id} not found")
+            raise HTTPException(
+                status_code=400, detail=f"Transaction id {req_id} not found"
+            )
         to_update.append(item)
 
     for match in to_update:

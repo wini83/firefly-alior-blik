@@ -8,7 +8,8 @@ from fireflyiii_enricher_core.firefly_client import (
     filter_by_description,
     filter_single_part,
     filter_without_category,
-    simplify_transactions,filter_without_tag
+    filter_without_tag,
+    simplify_transactions,
 )
 from fireflyiii_enricher_core.matcher import TransactionMatcher
 
@@ -33,10 +34,12 @@ class MatchResult:
     tx: SimplifiedTx
     matches: List[SimplifiedRecord]
 
+
 def add_line(existing: str | None, new_line: str) -> str:
     if existing:
         return existing + "\n" + new_line
     return new_line
+
 
 class TransactionProcessor:
     """Logika przetwarzania i aktualizacji transakcji"""

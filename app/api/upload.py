@@ -7,7 +7,7 @@ from app.services.auth import verify_token
 from app.services.csv_reader import BankCSVReader
 from app.utils.encoding import encode_base64url
 
-router = APIRouter(prefix="/upload-csv", tags=["upload"])
+router = APIRouter(prefix="/api/upload-csv", tags=["upload"])
 
 
 @router.post("", dependencies=[Depends(verify_token)])
