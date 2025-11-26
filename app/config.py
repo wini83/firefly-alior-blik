@@ -8,3 +8,4 @@ FIREFLY_URL = os.getenv("FIREFLY_URL")
 FIREFLY_TOKEN = os.getenv("FIREFLY_TOKEN")
 DESCRIPTION_FILTER = "BLIK - płatność w internecie"
 TAG_BLIK_DONE = "blik_done"
+DEMO_MODE = os.getenv("DEMO_MODE") == "true"

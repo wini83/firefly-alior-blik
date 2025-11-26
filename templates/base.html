@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ title or "Firefly Sync Tool" }}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+
+    <script defer src="/static/app.js"></script>
+    <script defer src="/static/auth.js"></script>
+</head>
+
+<body class="bg-base-200">
+
+    <!-- NAVBAR (globalny) -->
+    <div class="navbar bg-base-100 shadow">
+      <div class="flex-1">
+        <a class="btn btn-ghost text-xl">Firefly III Alior Blik Sync</a>
+      </div>
+
+      <ul class="steps hidden md:flex flex-none w-1/2">
+            <li class="step {{ 'step-primary' if step=='upload' else '' }}">Upload</li>
+            <li class="step {{ 'step-primary' if step=='preview' else '' }}">Preview</li>
+            <li class="step {{ 'step-primary' if step=='match' else '' }}">Match</li>
+            <li class="step {{ 'step-primary' if step=='update' else '' }}">Update</li>
+      </ul>
+
+      <div class="flex-none">
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+            <div class="w-10 rounded-full">
+              <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"/>
+            </div>
+          </div>
+          <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box mt-3 w-52 shadow">
+            <li><a>Profil</a></li>
+            <li><a>Ustawienia</a></li>
+            <li><a onclick="logout()">Wyloguj</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIEJSCE NA TREŚĆ -->
+    <main id="appContent" class="p-6">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

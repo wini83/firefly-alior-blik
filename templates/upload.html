@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-xl mx-auto bg-white p-6 rounded shadow space-y-6">
+
+    <h1 class="text-2xl font-bold">Upload pliku CSV</h1>
+    <p class="text-gray-600">Wgraj plik z Alior BLIK, aby rozpocząć proces.</p>
+
+    <!-- FORM  -->
+    <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+
+        <input type="file" name="file"
+               class="file-input file-input-bordered w-full"
+               required />
+
+        <button type="submit"
+                class="btn btn-primary w-full">
+            Prześlij CSV
+        </button>
+    </form>
+
+    <!-- WYNIK UPLOADU -->
+    <div id="uploadResult"></div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        window.location.href = "/login";
+        return;
+    }
+});
+
+document.getElementById("uploadForm").addEventListener("submit", async (evt) => {
+    evt.preventDefault();
+
+    const formData = new FormData(evt.target);
+
+    const r = await fetch("/api/upload-csv", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + localStorage.getItem("access_token")
+        },
+        body: formData
+    });
+
+    if (!r.ok) {
+        document.getElementById("uploadResult").innerHTML =
+            `<div class="alert alert-error">Błąd przy uploadzie</div>`;
+        return;
+    }
+
+    const data = await r.json();
+
+    document.getElementById("uploadResult").innerHTML = `
+        <div class="alert alert-success">
+            <span class="font-bold">Plik wczytany ✔</span><br>
+            ${data.count} rekordów
+        </div>
+
+        <div class="mt-4 flex flex-col space-y-3">
+            <a href="/file/${data.id}" class="btn btn-neutral">Podgląd pliku</a>
+            <a href="/match/${data.id}" class="btn btn-primary">Matchuj transakcje</a>
+        </div>
+    `;
+});
+</script>
+
+{% endblock %}
