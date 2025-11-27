@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fireflyiii_enricher_core.firefly_client import FireflyClient
 from pydantic import BaseModel
 
-from app.config import DESCRIPTION_FILTER, FIREFLY_TOKEN, FIREFLY_URL, TAG_BLIK_DONE
+from app.config import (DESCRIPTION_FILTER, FIREFLY_TOKEN, FIREFLY_URL,
+                        TAG_BLIK_DONE)
 from app.services.auth import get_current_user
 from app.services.csv_reader import BankCSVReader
 from app.services.tx_processor import MatchResult, TransactionProcessor
