@@ -9,5 +9,6 @@ async def upload_page(request: Request):
     return templates.TemplateResponse("upload.html", {
         "request": request,
         "title": "Upload CSV",
-        "step": "upload"
+        "step": "upload",
+        "page_title": "BLIK Sync"
     })

@@ -1,22 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="max-w-xl mx-auto bg-white p-6 rounded shadow space-y-6">
+<div class="card w-full p-6 bg-base-100 shadow-xl mt-2">
+         <ul class="steps hidden md:flex flex-none w-1/2">
+            <li class="step {{ 'step-primary' if step=='upload' else '' }}">Upload</li>
+            <li class="step {{ 'step-primary' if step=='preview' else '' }}">Preview</li>
+            <li class="step {{ 'step-primary' if step=='match' else '' }}">Match</li>
+            <li class="step {{ 'step-primary' if step=='update' else '' }}">Update</li>
+      </ul>
+</div>
 
-    <h1 class="text-2xl font-bold">Upload pliku CSV</h1>
-    <p class="text-gray-600">Wgraj plik z Alior BLIK, aby rozpocząć proces.</p>
-
+<div class="card w-full p-6 bg-base-100 shadow-xl mt-2">
+    <div class="text-xl font-semibold ">Upload pliku CSV</div>
+    <div class="divider mt-2"></div>
+    <p class="text-gray-600 mb-6">Wgraj plik z Alior BLIK, aby rozpocząć proces.</p>
+    <div class="text-sm text-gray-500">
+        Tylko pliki CSV. Maksymalny rozmiar pliku: 5MB.</div>
     <!-- FORM  -->
     <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
 
-        <input type="file" name="file"
-               class="file-input file-input-bordered w-full"
-               required />
-
-        <button type="submit"
-                class="btn btn-primary w-full">
-            Prześlij CSV
-        </button>
+        <input type="file" name="file" class="file-input file-input-bordered" required />
+        <div class="mt-8">
+            <button type="submit" class="btn btn-primary">
+                Prześlij CSV
+            </button>
+        </div>
     </form>
 
     <!-- WYNIK UPLOADU -->
@@ -25,37 +33,37 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("access_token");
+    document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("access_token");
 
-    if (!token) {
-        window.location.href = "/login";
-        return;
-    }
-});
-
-document.getElementById("uploadForm").addEventListener("submit", async (evt) => {
-    evt.preventDefault();
-
-    const formData = new FormData(evt.target);
-
-    const r = await fetch("/api/upload-csv", {
-        method: "POST",
-        headers: {
-            "Authorization": "Bearer " + localStorage.getItem("access_token")
-        },
-        body: formData
+        if (!token) {
+            window.location.href = "/login";
+            return;
+        }
     });
 
-    if (!r.ok) {
-        document.getElementById("uploadResult").innerHTML =
-            `<div class="alert alert-error">Błąd przy uploadzie</div>`;
-        return;
-    }
+    document.getElementById("uploadForm").addEventListener("submit", async (evt) => {
+        evt.preventDefault();
 
-    const data = await r.json();
+        const formData = new FormData(evt.target);
 
-    document.getElementById("uploadResult").innerHTML = `
+        const r = await fetch("/api/upload-csv", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("access_token")
+            },
+            body: formData
+        });
+
+        if (!r.ok) {
+            document.getElementById("uploadResult").innerHTML =
+                `<div class="alert alert-error">Błąd przy uploadzie</div>`;
+            return;
+        }
+
+        const data = await r.json();
+
+        document.getElementById("uploadResult").innerHTML = `
         <div class="alert alert-success">
             <span class="font-bold">Plik wczytany ✔</span><br>
             ${data.count} rekordów
@@ -63,10 +71,9 @@ document.getElementById("uploadForm").addEventListener("submit", async (evt) => 
 
         <div class="mt-4 flex flex-col space-y-3">
             <a href="/file/${data.id}" class="btn btn-neutral">Podgląd pliku</a>
-            <a href="/match/${data.id}" class="btn btn-primary">Matchuj transakcje</a>
         </div>
     `;
-});
+    });
 </script>
 
 {% endblock %}

@@ -12,5 +12,6 @@ def preview(request: Request, file_id: str):
     return templates.TemplateResponse("file.html", {
         "request": request,
         "file_id": file_id,
-        "step": "preview"
+        "step": "preview",
+        "page_title": "BLIK CSV File Preview"
     })
