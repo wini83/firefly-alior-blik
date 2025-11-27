@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
+from app.config import BLIK_PAGE_TITLE
 
 router = APIRouter()
 templates = Jinja2Templates("templates")
@@ -13,5 +14,5 @@ def preview(request: Request, file_id: str):
         "request": request,
         "file_id": file_id,
         "step": "preview",
-        "page_title": "BLIK CSV File Preview"
+        "page_title": BLIK_PAGE_TITLE
     })
