@@ -13,6 +13,7 @@ from app.routers.file import router as file_ui_router
 from app.routers.login import router as login_router
 from app.routers.upload import router as upload__ui_router
 from app.utils.logger import setup_logging
+from fastapi.middleware.cors import CORSMiddleware
 
 setup_logging()
 
@@ -26,6 +27,14 @@ def get_version() -> str:
 APP_VERSION = get_version()
 
 app = FastAPI(title="Firefly III Alior BLIK Tool", version=APP_VERSION)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 router = APIRouter()
 templates = Jinja2Templates("templates")
