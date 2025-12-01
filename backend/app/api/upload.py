@@ -7,11 +7,20 @@ from app.services.auth import get_current_user
 from app.services.csv_reader import BankCSVReader
 from app.utils.encoding import encode_base64url
 
+from pydantic import BaseModel
+
 router = APIRouter(prefix="/api/upload-csv", tags=["upload"])
 
 
+
+class UploadResponse(BaseModel):
+    message: str
+    count: int
+    id: str
+
+
 @router.post("", dependencies=[Depends(get_current_user)])
-async def upload_csv(file: UploadFile = File(...)):
+async def upload_csv(file: UploadFile = File(...)) -> UploadResponse:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
         content = await file.read()
         tmp.write(content)
@@ -23,8 +32,8 @@ async def upload_csv(file: UploadFile = File(...)):
     file_id = os.path.splitext(filename)[0]  # tmpXXXX
     encoded = encode_base64url(file_id)
 
-    return {
-        "message": "Plik poprawnie wczytany",
-        "count": len(records),
-        "id": encoded,
-    }
+    return UploadResponse(
+        message = "File uploaded successfully",
+        count = len(records),
+        id = encoded,
+    )

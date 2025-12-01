@@ -13,6 +13,7 @@ from app.services.auth import get_current_user
 from app.services.csv_reader import BankCSVReader
 from app.services.tx_processor import MatchResult, TransactionProcessor
 from app.utils.encoding import decode_base64url
+from app.services.tx_processor import SimplifiedRecord
 
 router = APIRouter(prefix="/api/file", tags=["files"])
 logger = logging.getLogger(__name__)
@@ -24,8 +25,30 @@ class ApplyPayload(BaseModel):
     csv_indexes: list[int]
 
 
+class FilePreviewResponse(BaseModel):
+    file_id: str
+    decoded_name: str
+    size: int
+    content: List[SimplifiedRecord]
+
+class FileMatchResponse(BaseModel):
+    file_id: str
+    decoded_name: str
+    records_in_file: int
+    transactions_found: int
+    transactions_not_matched: int
+    transactions_with_one_match: int
+    transactions_with_many_matches: int
+    content: List[MatchResult]
+
+class FileApplyResponse(BaseModel):
+    file_id: str
+    updated: int
+    errors: List[str]
+
+
 @router.get("/{encoded_id}", dependencies=[Depends(get_current_user)])
-async def get_tempfile(encoded_id: str):
+async def get_tempfile(encoded_id: str)-> FilePreviewResponse:
     try:
         print(f"cache items before: {len(MEM_MATCHES)}")
         decoded = decode_base64url(encoded_id)
@@ -41,19 +64,19 @@ async def get_tempfile(encoded_id: str):
 
         csv_data = BankCSVReader(full_path).parse()
 
-        return {
-            "file_id": encoded_id,
-            "decoded_name": decoded,
-            "size": len(csv_data),
-            "content": csv_data,
-        }
+        return FilePreviewResponse(
+            file_id= encoded_id,
+            decoded_name= decoded,
+            size= len(csv_data),
+            content= csv_data,
+        )
 
     except Exception:
         raise HTTPException(status_code=500, detail="Invalid or corrupted id")
 
 
 @router.get("/do-match/{encoded_id}", dependencies=[Depends(get_current_user)])
-async def do_match(encoded_id: str):
+async def do_match(encoded_id: str) -> FileMatchResponse:
     print(f"cache items before: {len(MEM_MATCHES)}")
     decoded = decode_base64url(encoded_id)
 
@@ -83,16 +106,16 @@ async def do_match(encoded_id: str):
 
     MEM_MATCHES[encoded_id] = report
 
-    return {
-        "file_id": encoded_id,
-        "decoded_name": decoded,
-        "records_in_file": len(csv_data),
-        "transactions_found": len(report),
-        "transactions_not_matched": not_matched,
-        "transactions_with_one_match": with_one_match,
-        "transactions_with_many_matches": with_many_matches,
-        "content": report,
-    }
+    return FileMatchResponse (
+        file_id= encoded_id,
+        decoded_name = decoded,
+        records_in_file = len(csv_data),
+        transactions_found= len(report),
+        transactions_not_matched= not_matched,
+        transactions_with_one_match= with_one_match,
+        transactions_with_many_matches= with_many_matches,
+        content=report,
+    )
 
 
 @router.post("/apply_match/{encoded_id}")
@@ -133,4 +156,4 @@ async def apply_matches(encoded_id: str, payload: ApplyPayload):
             updated += 1
         except RuntimeError as e:
             errors.append(f"Error updating transaction id {match.tx.id}: {str(e)}")
-    return {"file_id": encoded_id, "updated": updated, "errors": errors}
+    return FileApplyResponse(file_id=encoded_id, updated = updated, errors = errors)
