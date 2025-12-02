@@ -1,3 +1,10 @@
+## 0.4.4 (2025-12-02)
+
+### Refactor
+
+- **auth**: - replace os.getenv usage with shared `settings` instance  - explicitly type JWT payload to resolve Pylance update() errors  - clean up auth flow and remove debug prints
+- **ui**: deleted login and upload pages
+
 ## 0.4.3 (2025-12-01)
 
 ### Refactor
