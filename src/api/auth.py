@@ -1,5 +1,4 @@
 # app/api/auth.py
-import os
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -32,11 +31,11 @@ class Token(BaseModel):
 
 
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None):
-    to_encode:dict[str,object] = {"sub": subject}
+    to_encode: dict[str, object] = {"sub": subject}
     expire = datetime.utcnow() + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    to_encode["exp"]= expire
+    to_encode["exp"] = expire
     encoded = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded
 

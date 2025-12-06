@@ -8,6 +8,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV_PATH = os.path.join(BASE_DIR, ".env")
 load_dotenv(ENV_PATH)
 
+
 class Settings(BaseSettings):
     FIREFLY_URL: str | None = None
     FIREFLY_TOKEN: str | None = None

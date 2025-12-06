@@ -13,14 +13,15 @@ from src.utils.logger import setup_logging
 
 setup_logging()
 
+
 class HealthCheck(BaseModel):
     status: str = "OK"
+
 
 def get_version() -> str:
     with open("pyproject.toml", "rb") as f:
         data = tomllib.load(f)
     return data["project"]["version"]
-
 
 
 APP_VERSION = get_version()
@@ -44,6 +45,7 @@ templates = Jinja2Templates("templates")
 app.include_router(auth_router)
 app.include_router(upload_router)
 app.include_router(file_router)
+
 
 @app.get("/api/health", response_model=HealthCheck, tags=["health"])
 async def health_check() -> HealthCheck:
