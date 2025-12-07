@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
-from src.api.models.system import HealthResponse,VersionResponse
-
+from src.api.models.system import HealthResponse, VersionResponse
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
@@ -13,9 +12,11 @@ def init_system_router(version: str):
     global APP_VERSION
     APP_VERSION = version
 
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     return HealthResponse()
+
 
 @router.get("/version", response_model=VersionResponse)
 async def version_check():

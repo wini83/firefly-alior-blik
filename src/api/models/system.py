@@ -1,5 +1,6 @@
-from pydantic import BaseModel,Field
-from datetime import datetime,timezone
+from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field
 
 
 class HealthResponse(BaseModel):
@@ -7,6 +8,7 @@ class HealthResponse(BaseModel):
     database: str | None = None
     external_services: dict[str, str] | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 
 class VersionResponse(BaseModel):
     version: str

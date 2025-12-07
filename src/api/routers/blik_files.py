@@ -5,7 +5,6 @@ from typing import Dict, List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fireflyiii_enricher_core.firefly_client import FireflyClient
-from pydantic import BaseModel
 
 from src.api.models.blik_files import (
     ApplyPayload,
@@ -14,13 +13,10 @@ from src.api.models.blik_files import (
     FilePreviewResponse,
     UploadResponse,
 )
-from src.settings import settings
 from src.services.auth import get_current_user
 from src.services.csv_reader import BankCSVReader
-from src.services.tx_processor import (
-    MatchResult,
-    TransactionProcessor,
-)
+from src.services.tx_processor import MatchResult, TransactionProcessor
+from src.settings import settings
 from src.utils.encoding import decode_base64url, encode_base64url
 
 router = APIRouter(prefix="/api/blik_files", tags=["blik-files"])
@@ -29,9 +25,9 @@ logger = logging.getLogger(__name__)
 MEM_MATCHES: Dict[str, List[MatchResult]] = {}
 
 
-@router.post("",
-             dependencies=[Depends(get_current_user)],
-             response_model=UploadResponse)
+@router.post(
+    "", dependencies=[Depends(get_current_user)], response_model=UploadResponse
+)
 async def upload_csv(file: UploadFile = File(...)):
     """
     Upload a CSV file and parse its contents. The file is stored temporarily for further processing.
@@ -61,17 +57,18 @@ async def upload_csv(file: UploadFile = File(...)):
     )
 
 
-
-@router.get("/{encoded_id}",
-            dependencies=[Depends(get_current_user)],
-            response_model=FilePreviewResponse)
+@router.get(
+    "/{encoded_id}",
+    dependencies=[Depends(get_current_user)],
+    response_model=FilePreviewResponse,
+)
 async def get_tempfile(encoded_id: str):
     """
     Retrieve and preview the contents of an uploaded CSV file by its encoded ID.
 
     Args:
         encoded_id (str): The base64url encoded ID of the uploaded file.
-    
+
     Returns:
         FilePreviewResponse: Response containing file details and parsed content."""
     try:
@@ -100,16 +97,18 @@ async def get_tempfile(encoded_id: str):
         raise HTTPException(status_code=500, detail="Invalid or corrupted id")
 
 
-@router.get("/{encoded_id}/matches",
-            dependencies=[Depends(get_current_user)],
-            response_model=FileMatchResponse)
+@router.get(
+    "/{encoded_id}/matches",
+    dependencies=[Depends(get_current_user)],
+    response_model=FileMatchResponse,
+)
 async def do_match(encoded_id: str):
     """
     Process the uploaded CSV file to find matching transactions in Firefly III.
-    
+
     Args:
         encoded_id (str): The base64url encoded ID of the uploaded file.
-        
+
     Returns:
     FileMatchResponse: Response containing match results and statistics.
     """
@@ -135,9 +134,9 @@ async def do_match(encoded_id: str):
     processor = TransactionProcessor(firefly)
     report = processor.match(
         csv_data,
-        settings.BLIK_DESCRIPTION_FILTER, 
+        settings.BLIK_DESCRIPTION_FILTER,
         exact_match=False,
-        tag=settings.TAG_BLIK_DONE
+        tag=settings.TAG_BLIK_DONE,
     )
     not_matched = len([r for r in report if not r.matches])
     with_one_match = len([r for r in report if len(r.matches) == 1])
@@ -157,9 +156,11 @@ async def do_match(encoded_id: str):
     )
 
 
-@router.post("/{encoded_id}/matches",
-              dependencies=[Depends(get_current_user)],
-              response_model=FileApplyResponse)
+@router.post(
+    "/{encoded_id}/matches",
+    dependencies=[Depends(get_current_user)],
+    response_model=FileApplyResponse,
+)
 async def apply_matches(encoded_id: str, payload: ApplyPayload):
     """
     Apply selected matches to the transactions in Firefly III.

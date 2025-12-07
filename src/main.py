@@ -1,12 +1,12 @@
 import tomllib
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
 from src.api.routers.auth import router as auth_router
 from src.api.routers.blik_files import router as blik_router
-from src.api.routers.system import router as system_router, init_system_router
+from src.api.routers.system import init_system_router
+from src.api.routers.system import router as system_router
+from src.middleware import register_middlewares
 from src.settings import settings
 from src.utils.logger import setup_logging
 
@@ -26,16 +26,11 @@ print(f"Settings loaded, DEMO_MODE={settings.DEMO_MODE}")
 
 app = FastAPI(title="Firefly III Toolkit", version=APP_VERSION)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+register_middlewares(app, settings)
+
+print(f"Middlewares registered; allowed_origins={settings.allowed_origins}")
 
 
 app.include_router(auth_router)
 app.include_router(blik_router)
 app.include_router(system_router)
-
