@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from settings import settings
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def load_users() -> dict:
