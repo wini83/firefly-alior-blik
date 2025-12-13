@@ -1,10 +1,17 @@
+from collections import defaultdict
 import logging
 import os
 import tempfile
 from typing import Dict, List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from fireflyiii_enricher_core.firefly_client import FireflyClient
+from fireflyiii_enricher_core.firefly_client import (
+    FireflyClient,
+    filter_single_part,
+    filter_without_category,
+    filter_by_description,
+    simplify_transactions,
+)
 
 from src.api.models.blik_files import (
     ApplyPayload,
@@ -12,10 +19,11 @@ from src.api.models.blik_files import (
     FileMatchResponse,
     FilePreviewResponse,
     UploadResponse,
+    StatisticsResponse,
 )
 from src.services.auth import get_current_user
 from src.services.csv_reader import BankCSVReader
-from src.services.tx_processor import MatchResult, TransactionProcessor
+from src.services.tx_processor import MatchResult, TransactionProcessor, SimplifiedTx
 from src.settings import settings
 from src.utils.encoding import decode_base64url, encode_base64url
 
@@ -23,6 +31,51 @@ router = APIRouter(prefix="/api/blik_files", tags=["blik-files"])
 logger = logging.getLogger(__name__)
 
 MEM_MATCHES: Dict[str, List[MatchResult]] = {}
+
+
+def firefly_dep() -> FireflyClient:
+    if not settings.FIREFLY_URL or not settings.FIREFLY_TOKEN:
+        logger.error("Missing FIREFLY_URL or FIREFLY_TOKEN")
+        raise HTTPException(status_code=500, detail="Config error")
+
+    return FireflyClient(settings.FIREFLY_URL, settings.FIREFLY_TOKEN)
+
+
+def group_by_month(txs: list[SimplifiedTx], tag: str):
+    grouped = defaultdict(list)
+    for tx in txs:
+        month = tx.date.strftime("%Y-%m")  # formatowanie miesiąca
+        grouped[month].append(tx)
+
+    return dict(grouped)
+
+
+@router.get("/statistics", dependencies=[Depends(get_current_user)])
+async def get_statistics(firefly: FireflyClient = Depends(firefly_dep)):
+    raw_txs = firefly.fetch_transactions()
+    single = filter_single_part(raw_txs)
+    uncategorized = filter_without_category(single)
+    filtered_by_desc_exact = filter_by_description(
+        uncategorized, settings.BLIK_DESCRIPTION_FILTER, True
+    )
+    filtered_by_desc_partial = filter_by_description(
+        uncategorized, settings.BLIK_DESCRIPTION_FILTER, False
+    )
+
+    simplified = simplify_transactions(filtered_by_desc_exact)
+
+    not_processed = [
+        tx for tx in simplified if not tx.tags or settings.TAG_BLIK_DONE not in tx.tags
+    ]
+
+    return StatisticsResponse(
+        total_transactions=len(raw_txs),
+        single_part_transactions=len(single),
+        uncategorized_transactions=len(uncategorized),
+        filtered_by_description_exact=len(filtered_by_desc_exact),
+        filtered_by_description_partial=len(filtered_by_desc_partial),
+        not_processed_transactions=len(not_processed),
+    )
 
 
 @router.post(
